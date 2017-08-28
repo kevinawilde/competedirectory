@@ -1,82 +1,53 @@
 var restify = require('restify');
-var server = restify.createServer();
 
-server.use(restify.plugins.acceptParser(server.acceptable));
-server.use(restify.plugins.queryParser());
-server.use(restify.plugins.bodyParser());
+let employees = []
+let currentID = 1
 
-let employees = [];
-let currentID = 0;
-
-function Employee() {
-    currentID++;
-    this.id = currentID;
-    this.dateCreated = date;
-};
-function getEmployees(req, res, next) {
-    // Resitify currently has a bug which doesn't allow you to set default headers
-    // These headers comply with CORS and allow us to serve our response to any origin
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    //find the appropriate data
-    res.send(employees);
+let Employee = function(first, last) {
+    this.id = currentID
+    this.firstName = first;
+    this.lastName = last;
+    currentID = currentID++
 }
+
 function getEmployee(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    var employee = employees.filter(function(employee) {
-        return employee.id == req.params.id;
-    });
-    res.send(employee);
-}
-function putEmployees(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    //Make new person
-    var employee = new Employee();
     let id = req.params.id;
-    let exists = false;
     console.log(id);
-    //See if this person exists
+
+    let found;
     for (let i = 0; i < employees.length; i++) {
         if (employees[i].id == id) {
-            employee = employees[i];
-            employee.firstName = req.body.firstName;
-            employee.lastName = req.body.lastName;
-            employees[i] = employee;
-            exists = true;
+            found = employees[i]
             break;
         }
     }
-    if (!exists) {
-        employee.firstName = req.body.firstName;
-        employee.lastName = req.body.lastName; //save the new message to the collection
-        employee.id = parseInt(id);
-        employees.push(employee);
-    }
-    console.log(employee);
-    res.send(employee);
+    res.send(found);
+    next();
 }
-function delEmployee(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
 
-    let id = parseInt(req.params.id);
+function getEmployees(req, res, next) {
+    employee = new Employee(firstName, lastName)
+    res.send(employee);
+    next();
+}
 
-    for (let i = 0; i < employees.length; i++) {
-        if (employees[i].id === id) {
-            employees.splice(i, 1);
-        };
-    }
-    console.log(employees);
-    res.end();
-};
-server.get('/employees', getEmployees);
+function postEmployee(req, res, next) {
+	let newEmployee = new Employee(req.body.firstName, req.body.lastName);
+	employees.push(newEmployee);
+    res.send(newEmployee);
+    next();
+}
+
+var server = restify.createServer();
+server.use(restify.plugins.queryParser());
+server.use(restify.plugins.bodyParser());
+
 server.get('/employees/:id', getEmployee);
-server.post('/employees', postEmployees);
-server.put('/employees/:id', putEmployees);
-server.del('/employees/:id', delEmployee);
+server.get('/employees/', getEmployees);
+server.post('/employees/', postEmployee);
+server.put('/employees/:id', editEmployee);
+server.del('employees/:id', deleteEmployee);
+//server.head('/hello/:name', respond);
 
 server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);

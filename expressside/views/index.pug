@@ -1,0 +1,12 @@
+extends layout
+
+block content
+	h3 Master (list all employees)
+	hr
+	h4 Admin Name
+	h4 Date Created
+	hr
+	-for(let i = 0; i < employees.length; i++)
+		div(class='height') #{employees[i].firstName} #{employees[i].lastName} #{employees[i].dateCreated}
+		hr
+					
